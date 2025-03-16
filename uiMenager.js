@@ -1,136 +1,126 @@
-import { QUIZ_STATE } from "./config.js";
-import {calculateResults,getCurrentQuestion,getTimerDuration,} from "./quizManager.js";
+import { API_CONFIG, QUIZ_STATE } from "./config.js";
+import { handleAnswer } from "./quizManager.js";
 
-let timerInterval;
+let timer;
 
-export function initializeCategorySelection(categories) {
-  const container = document.querySelector("#categories");
-  container.innerHTML = "";
+export const initUI = {
+  loading: (show) => {
+    document.querySelector(".loading").style.display = show ? "flex" : "none";
+  },
 
-  categories.forEach(([categoryId, categoryName]) => {
-    const div = document.createElement("div");
-    div.className = "category-item";
-    div.innerHTML = ` <input type="checkbox" id="${categoryId}" value="${categoryId}"> <label for="${categoryId}">${categoryName}</label>`;
-    container.appendChild(div);
-  });
-}
+  showScreen: (screen) => {
+    document.querySelectorAll("[data-screen]").forEach((el) => {
+      el.classList.toggle("active", el.dataset.screen === screen);
+    });
+  },
 
-export function showScreen(screenName) {
-  document.querySelectorAll(".setup-screen, .quiz-container, .results-container").forEach((el) => el.classList.remove("active"));
-  document.querySelector(`.${screenName}`).classList.add("active");
-}
+  initCategories: (categories) => {
+    const container = document.querySelector("#categories");
+    container.innerHTML = categories
+      .map(
+        ({ id, name }) => `
+            <div class="category-item">
+                <input type="checkbox" id="${id}" value="${id}">
+                <label for="${id}">${name}</label>
+            </div>
+        `
+      )
+      .join("");
+  },
 
-export function updateQuestionUI() {
-  const question = getCurrentQuestion();
-  const questionElement = document.querySelector("#question");
-  const answersElement = document.querySelector("#answers");
-  const difficultyElement = document.querySelector("#difficulty");
-  const categoryElement = document.querySelector("#category");
+  updateQuestion: () => {
+    const question = QUIZ_STATE.questions[QUIZ_STATE.currentIndex];
+    const answers = [...question.incorrectAnswers, question.correctAnswer].sort(
+      () => Math.random() - 0.5
+    );
 
- 
-  questionElement.textContent = question.question.text;//Update- a novo pitanje 
+    document.querySelector("#question").textContent = question.question.text;
+    document.querySelector("#category").textContent = question.category;
+    document.querySelector("#difficulty").textContent = question.difficulty;
 
-  
-  difficultyElement.className = `difficulty-badge ${question.difficulty}`;
-  difficultyElement.textContent = question.difficulty;
-  categoryElement.textContent = question.category;
+    const answersContainer = document.querySelector("#answers");
+    answersContainer.innerHTML = answers
+      .map(
+        (answer) => `
+            <button class="answer-btn" data-answer="${answer}">${answer}</button>
+        `
+      )
+      .join("");
 
-  //Update-a odgovore
-  answersElement.innerHTML = "";
-  const answers = [...question.incorrectAnswers, question.correctAnswer];
-  answers.sort(() => Math.random() - 0.5);
+    this.startTimer(API_CONFIG.DIFFICULTY_TIMERS[QUIZ_STATE.difficulty]);
+  },
 
-  answers.forEach((answer) => {
-    const button = document.createElement("button");
-    button.className = "answer-btn";
-    button.textContent = answer;
-    button.onclick = () =>handleAnswerSelection(answer, question.correctAnswer);
-    answersElement.appendChild(button);
-  });
+  startTimer: (seconds) => {
+    clearInterval(timer);
+    let time = seconds;
+    const timerEl = document.querySelector("#timer");
 
-  startTimer(getTimerDuration(question.difficulty));
-}
+    timer = setInterval(() => {
+      timerEl.textContent = `${time}s`;
+      if (time-- <= 0) {
+        clearInterval(timer);
+        this.handleTimeout();
+      }
+    }, 1000);
+  },
 
-function startTimer(duration) {
-  let timeLeft = duration;
-  const timerDisplay = document.querySelector("#timer");
+  handleTimeout: () => {
+    const correct = QUIZ_STATE.questions[QUIZ_STATE.currentIndex].correctAnswer;
+    this.showFeedback(null, correct);
+    handleAnswer("skipped", correct);
+    setTimeout(this.nextQuestion, 1500);
+  },
 
-  clearInterval(timerInterval);
-  timerDisplay.textContent = `${timeLeft}s`;
+  showFeedback: (selected, correct) => {
+    document.querySelectorAll(".answer-btn").forEach((btn) => {
+      btn.disabled = true;
+      if (btn.dataset.answer === correct) {
+        btn.classList.add("correct");
+      }
+      if (btn.dataset.answer === selected) {
+        btn.classList.add("wrong");
+      }
+    });
+    document.querySelector("#score").textContent = QUIZ_STATE.score;
+  },
 
-  timerInterval = setInterval(() => {
-    timeLeft--;
-    timerDisplay.textContent = `${timeLeft}s`;
-
-    if (timeLeft <= 0) {
-      clearInterval(timerInterval);
-      handleTimeout();
+  nextQuestion: () => {
+    QUIZ_STATE.currentIndex++;
+    if (QUIZ_STATE.currentIndex < QUIZ_STATE.questions.length) {
+      this.updateQuestion();
+    } else {
+      this.showResults();
     }
-  }, 1000);
-}
+  },
 
-function handleAnswerSelection(selectedAnswer, correctAnswer) {
-  clearInterval(timerInterval);
-  calculateResults(selectedAnswer, correctAnswer);
-  showAnswerFeedback(selectedAnswer, correctAnswer);
-  setTimeout(advanceToNextQuestion, 1500);
-}
+  showResults: () => {
+    this.showScreen("results");
+    document.querySelector("#final-score").textContent = QUIZ_STATE.score;
+    document.querySelector("#correct-count").textContent =
+      QUIZ_STATE.results.correct;
+    document.querySelector("#wrong-count").textContent =
+      QUIZ_STATE.results.wrong;
+    document.querySelector("#skipped-count").textContent =
+      QUIZ_STATE.results.skipped;
 
-function handleTimeout() {
-  calculateResults("skipped", "");
-  showAnswerFeedback(null, getCurrentQuestion().correctAnswer);
-  setTimeout(advanceToNextQuestion, 1500);
-}
+    const details = document.querySelector("#results-details");
+    details.innerHTML = QUIZ_STATE.questions
+      .map(
+        (q, i) => `
+            <div class="result-item">
+                <h3>Question ${i + 1}</h3>
+                <p>${q.question.text}</p>
+                <p class="correct-answer">Correct: ${q.correctAnswer}</p>
+            </div>
+        `
+      )
+      .join("");
+  },
 
-function showAnswerFeedback(selectedAnswer, correctAnswer) {
-  const buttons = document.querySelectorAll(".answer-btn");
-
-  buttons.forEach((button) => {
-    button.disabled = true;
-    if (button.textContent === correctAnswer) {
-      button.classList.add("correct");
-    } else if (button.textContent === selectedAnswer) {
-      button.classList.add("wrong");
-    }
-  });
-
-  updateScoreDisplay();
-}
-
-function advanceToNextQuestion() {
-  QUIZ_STATE.currentQuestionIndex++;
-
-  if (QUIZ_STATE.currentQuestionIndex < QUIZ_STATE.questions.length) {
-    updateQuestionUI();
-  } else {
-    showResultsScreen();
-  }
-}
-
-function updateScoreDisplay() {
-  document.getElementById("score").textContent = QUIZ_STATE.score;
-}
-
-export function showResultsScreen() {
-  showScreen("results-container");
-
-
-  document.querySelector("#final-score").textContent = `${QUIZ_STATE.score}/${QUIZ_STATE.questions.length}`;
-  document.querySelector("#correct-answers").textContent =QUIZ_STATE.results.correct;
-  document.querySelector("#wrong-answers").textContent =QUIZ_STATE.results.wrong;
-  document.querySelector("#skipped-questions").textContent =QUIZ_STATE.results.skipped;
-
-
-  const detailsContainer = document.querySelector("#results-details");
-  detailsContainer.innerHTML = "";
-
-  QUIZ_STATE.questions.forEach((question, index) => {
-    const div = document.createElement("div");
-    div.className = "result-item";
-    div.innerHTML = `<h4>Question ${index + 1}</h4><p>${question.question.text}</p><p class="correct-answer">Correct Answer: ${
-              question.correctAnswer
-            }</p>
-        `;
-    detailsContainer.appendChild(div);
-  });
-}
+  showError: (message) => {
+    const errorEl = document.querySelector("#error");
+    errorEl.textContent = message;
+    errorEl.classList.add("show");
+    setTimeout(() => errorEl.classList.remove("show"), 3000);
+  },
+};

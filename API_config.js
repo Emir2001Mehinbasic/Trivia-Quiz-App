@@ -1,23 +1,25 @@
 export const API_CONFIG = {
   BASE_URL: "https://the-trivia-api.com/v2",
-  CATEGORIES_ENDPOINT: "/api/categories",
-  QUESTIONS_ENDPOINT: "/questions",
+  CATEGORIES: "/categories", 
+  QUESTIONS: "/questions", 
   DEFAULT_LIMIT: 10,
   DIFFICULTY_TIMERS: {
-    easy: 10,
-    medium: 8,
-    hard: 6,
+    easy: 15,
+    medium: 10,
+    hard: 5,
   },
 };
 
 export const QUIZ_STATE = {
-  currentQuestionIndex: 0,
+  currentIndex: 0,
   score: 0,
-  selectedCategories: [],
+  categories: [],
+  difficulty: "easy",
   questions: [],
   results: {
     correct: 0,
     wrong: 0,
     skipped: 0,
   },
+  limit: API_CONFIG.DEFAULT_LIMIT, // dinamicko mjenjanje pitanja
 };

@@ -1,57 +1,51 @@
 import { API_CONFIG, QUIZ_STATE } from "./config.js";
 
-export async function fetchCategories() {//Fetch-a kategorije iz API
+export const fetchCategories = async () => {
   try {
     const response = await fetch(
-      `${API_CONFIG.BASE_URL}${API_CONFIG.CATEGORIES_ENDPOINT}`
+      `${API_CONFIG.BASE_URL}${API_CONFIG.CATEGORIES}`
     );
     const data = await response.json();
-    return Object.entries(data);
+    return Object.entries(data).map(([id, name]) => ({
+      id: id.toLowerCase().replace(/\s+/g, "_"),
+      name: name.name,
+    }));
   } catch (error) {
     throw new Error("Failed to fetch categories");
   }
-}
+};
 
-export async function fetchQuestions() {
-  //Fetch-a pitanja iz API
+export const fetchQuestions = async () => {
   try {
     const params = new URLSearchParams({
-      categories: QUIZ_STATE.selectedCategories.join(","),
-      limit: API_CONFIG.DEFAULT_LIMIT,
+      categories: QUIZ_STATE.categories,
+      difficulty: QUIZ_STATE.difficulty,
+      limit: API_CONFIG.LIMIT,
     });
 
     const response = await fetch(
-      `${API_CONFIG.BASE_URL}${API_CONFIG.QUESTIONS_ENDPOINT}?${params}`
+      `${API_CONFIG.BASE_URL}${API_CONFIG.QUESTIONS}?${params}`
     );
-    const data = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
     throw new Error("Failed to fetch questions");
   }
-}
+};
 
-export function calculateResults(selectedAnswer, correctAnswer) {
-  if (selectedAnswer === correctAnswer) {
+export const handleAnswer = (selected, correct) => {
+  if (selected === correct) {
     QUIZ_STATE.results.correct++;
     QUIZ_STATE.score++;
-  } else if (selectedAnswer === "skipped") {
+  } else if (selected === "skipped") {
     QUIZ_STATE.results.skipped++;
   } else {
     QUIZ_STATE.results.wrong++;
   }
-}
+};
 
-export function resetQuizState() {
-  QUIZ_STATE.currentQuestionIndex = 0;
+export const resetQuiz = () => {
+  QUIZ_STATE.currentIndex = 0;
   QUIZ_STATE.score = 0;
   QUIZ_STATE.questions = [];
   QUIZ_STATE.results = { correct: 0, wrong: 0, skipped: 0 };
-}
-
-export function getCurrentQuestion() {
-  return QUIZ_STATE.questions[QUIZ_STATE.currentQuestionIndex];
-}
-
-export function getTimerDuration(difficulty) {
-  return API_CONFIG.DIFFICULTY_TIMERS[difficulty] || 10;
-}
+};
