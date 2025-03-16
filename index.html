@@ -1,23 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Trivia Quiz</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="quiz-container">
-        <h1>Trivia Quiz</h1>
-        <div class="score-board">Score: <span id="score">0</span></div>
-        <div class="question-container">
-            <div id="question" class="question"></div>
-            <div id="answers" class="answers"></div>
-        </div>
-        <button id="next-btn" class="control-btn">Next Question</button>
-        <div id="error" class="error-message"></div>
-    </div>
+    <link rel="stylesheet" href="styles.css" />
+    <script type="module" src="app.js"></script>
+  </head>
+  <body>
+    <div class="app-container">
+      <div class="setup-screen active">
+        <h1>Quiz Setup</h1>
+        <div class="settings-container">
+          <div class="setting-group">
+            <h3>Select Categories:</h3>
+            <div id="categories" class="categories-container"></div>
+          </div>
 
-    <script src="scripts/app.js"></script>
-</body>
+          <div class="setting-group">
+            <h3>Select Difficulty:</h3>
+            <div class="difficulty-select">
+              <label class="difficulty-option">
+                <input type="radio" name="difficulty" value="easy" checked />
+                <span class="difficulty-bubble easy">Easy</span>
+              </label>
+              <label class="difficulty-option">
+                <input type="radio" name="difficulty" value="medium" />
+                <span class="difficulty-bubble medium">Medium</span>
+              </label>
+              <label class="difficulty-option">
+                <input type="radio" name="difficulty" value="hard" />
+                <span class="difficulty-bubble hard">Hard</span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <button id="start-quiz" class="control-btn">Start Quiz</button>
+      </div>
+      <div class="quiz-container">
+        <h1>Trivia Challenge</h1>
+        <div class="quiz-header">
+          <div class="score-board">Score: <span id="score">0</span></div>
+          <div id="timer" class="timer">10s</div>
+        </div>
+        <div class="question-container">
+          <div class="question-meta">
+            <div id="difficulty" class="difficulty-badge"></div>
+            <div id="category" class="category-badge"></div>
+          </div>
+          <div id="question" class="question"></div>
+          <div id="answers" class="answers"></div>
+        </div>
+        <button id="skip-btn" class="control-btn">Skip Question</button>
+        <div id="error" class="error-message"></div>
+      </div>
+      <div class="results-container">
+        <h1>Quiz Results</h1>
+        <div class="results-summary">
+          <h2>Final Score: <span id="final-score">0</span></h2>
+          <div class="stats">
+            <p>Correct Answers: <span id="correct-answers">0</span></p>
+            <p>Wrong Answers: <span id="wrong-answers">0</span></p>
+            <p>Skipped Questions: <span id="skipped-questions">0</span></p>
+          </div>
+          <div id="results-details" class="results-details"></div>
+        </div>
+        <button id="restart-quiz" class="control-btn">Restart Quiz</button>
+      </div>
+    </div>
+  </body>
 </html>
