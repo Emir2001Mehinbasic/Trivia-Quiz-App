@@ -5,7 +5,6 @@ let questionCount = 0;
 const maxQuestions = 3; 
 const score = { correct: 0 }; 
 
-
 const fetchBtn = document.querySelector("#fetchBtn");
 const questionElement = document.querySelector("#question");
 const answersList = document.querySelector("#answers");
@@ -14,8 +13,6 @@ const categorySelect = document.querySelector("#category");
 const nextBtn = document.querySelector("#nextBtn");
 const timerElement = document.querySelector("#timeRemaining");
 const currentQuestionNumber = document.querySelector("#currentQuestionNumber");
-
-
 const scorePopup = document.querySelector("#scorePopup");
 const finalScoreElement = document.querySelector("#finalScore");
 const closePopupBtn = document.querySelector("#closePopupBtn");
@@ -27,17 +24,17 @@ fetchBtn.addEventListener("click", async () => {
     return;
   }
 
-  // Start the quiz if less than 3 questions have been answered
+
   if (questionCount < maxQuestions) {
-    nextBtn.style.display = "none"; // Hide "Next Question" button until answered
-    await getTrivia(); // Get new trivia question
-    startTimer(); // Start the timer
-    questionCount++; // Increment question count
-    currentQuestionNumber.textContent = `Question: ${questionCount}`; // Update question number
-    document.getElementById("quizArea").style.display = "block"; // Show quiz area
+    nextBtn.style.display = "none"; 
+    await getTrivia(); 
+    startTimer(); 
+    questionCount++; 
+    currentQuestionNumber.textContent = `Question: ${questionCount}`; 
+    document.getElementById("quizArea").style.display = "block"; 
   } else {
-    showScore(); // Show score popup after 3 questions
-    fetchBtn.disabled = true; // Disable start button after quiz ends
+    showScore(); 
+    fetchBtn.disabled = true; 
   }
 });
 
@@ -57,9 +54,9 @@ async function getTrivia() {
         ...currentTrivia.incorrectAnswers,
         currentTrivia.correctAnswer,
       ];
-      answers.sort(() => Math.random() - 0.5); // Randomize answers
+      answers.sort(() => Math.random() - 0.5); // random pitanja daje
 
-      answersList.innerHTML = ""; // Clear previous answers
+      answersList.innerHTML = ""; // uklanja prolsa pitanja
       answers.forEach((answer) => {
         const li = document.createElement("li");
         li.textContent = answer;
