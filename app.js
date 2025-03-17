@@ -1,78 +1,148 @@
-import { API_CONFIG, QUIZ_STATE } from "./config.js";
-import { fetchCategories, fetchQuestions, resetQuiz } from "./quizManager.js";
-import { initUI } from "./uiManager.js";
+let currentTrivia = {}; // Current trivia question
+let timer; 
+let timeRemaining = 0; 
+let questionCount = 0; 
+const maxQuestions = 3; 
+const score = { correct: 0 }; 
 
-document.addEventListener("DOMContentLoaded", async () => {
-  try {
-    initUI.loading(true);
-    const categories = await fetchCategories();
-    initUI.initCategories(categories);
 
-    // Event Listeners
-    document.querySelector("#start-btn").addEventListener("click", startQuiz);
-    document
-      .querySelector("#restart-btn")
-      .addEventListener("click", restartQuiz);
-    document.querySelector("#skip-btn").addEventListener("click", skipQuestion);
+const fetchBtn = document.querySelector("#fetchBtn");
+const questionElement = document.querySelector("#question");
+const answersList = document.querySelector("#answers");
+const difficultySelect = document.querySelector("#difficulty");
+const categorySelect = document.querySelector("#category");
+const nextBtn = document.querySelector("#nextBtn");
+const timerElement = document.querySelector("#timeRemaining");
+const currentQuestionNumber = document.querySelector("#currentQuestionNumber");
 
-    document.querySelector("#answers").addEventListener("click", (e) => {
-      const answerBtn = e.target.closest(".answer-btn");
-      if (answerBtn) {
-        const selected = answerBtn.dataset.answer;
-        const correct =
-          QUIZ_STATE.questions[QUIZ_STATE.currentIndex].correctAnswer;
-        initUI.showFeedback(selected, correct);
-        handleAnswer(selected, correct);
-        setTimeout(initUI.nextQuestion, 1500);
-      }
-    });
-  } catch (error) {
-    initUI.showError(error.message);
-  } finally {
-    initUI.loading(false);
+
+const scorePopup = document.getElementById("scorePopup");
+const finalScoreElement = document.getElementById("finalScore");
+const closePopupBtn = document.getElementById("closePopupBtn");
+
+fetchBtn.addEventListener("click", async () => {
+  const selectedCategory = categorySelect.value;
+  if (!selectedCategory) {
+    alert("Please select a category!");
+    return;
+  }
+
+  // Start the quiz if less than 3 questions have been answered
+  if (questionCount < maxQuestions) {
+    nextBtn.style.display = "none"; // Hide "Next Question" button until answered
+    await getTrivia(); // Get new trivia question
+    startTimer(); // Start the timer
+    questionCount++; // Increment question count
+    currentQuestionNumber.textContent = `Question: ${questionCount}`; // Update question number
+    document.getElementById("quizArea").style.display = "block"; // Show quiz area
+  } else {
+    showScore(); // Show score popup after 3 questions
+    fetchBtn.disabled = true; // Disable start button after quiz ends
   }
 });
 
-async function startQuiz() {
+async function getTrivia() {
   try {
-    QUIZ_STATE.categories = Array.from(
-      document.querySelectorAll("#categories input:checked")
-    ).map((cb) => cb.value);
+    const selectedDifficulty = difficultySelect.value;
+    const response = await fetch(
+      `https://the-trivia-api.com/v2/questions?limit=1&difficulties=${selectedDifficulty}&categories=${categorySelect.value}`
+    );
+    const data = await response.json();
 
-    QUIZ_STATE.difficulty = document.querySelector(
-      'input[name="difficulty"]:checked'
-    ).value;
+    if (data && data.length > 0) {
+      currentTrivia = data[0];
+      questionElement.textContent = currentTrivia.question.text;
 
-    if (!QUIZ_STATE.categories.length) {
-      throw new Error("Please select at least one category");
+      const answers = [
+        ...currentTrivia.incorrectAnswers,
+        currentTrivia.correctAnswer,
+      ];
+      answers.sort(() => Math.random() - 0.5); // Randomize answers
+
+      answersList.innerHTML = ""; // Clear previous answers
+      answers.forEach((answer) => {
+        const li = document.createElement("li");
+        li.textContent = answer;
+        li.addEventListener("click", checkAnswer);
+        answersList.appendChild(li);
+      });
     }
-
-    initUI.loading(true);
-    QUIZ_STATE.questions = await fetchQuestions();
-    resetQuiz();
-    initUI.showScreen("quiz");
-    initUI.updateQuestion();
-  } catch (error) {
-    initUI.showError(error.message);
-  } finally {
-    initUI.loading(false);
+  } catch (err) {
+    console.error("Error fetching trivia data:", err);
   }
 }
 
-function restartQuiz() {
-  resetQuiz();
-  initUI.showScreen("setup");
-  document
-    .querySelectorAll("#categories input")
-    .forEach((cb) => (cb.checked = false));
-  document.querySelector(
-    'input[name="difficulty"][value="easy"]'
-  ).checked = true;
+function checkAnswer(event) {
+  const selectedAnswer = event.target.textContent;
+  const isCorrect = selectedAnswer === currentTrivia.correctAnswer;
+
+  if (isCorrect) {
+    event.target.style.backgroundColor = "green";
+    score.correct++; 
+  } else {
+    event.target.style.backgroundColor = "red";
+  }
+
+ 
+  answersList
+    .querySelectorAll("li")
+    .forEach((li) => li.removeEventListener("click", checkAnswer));
+  nextBtn.style.display = "block";
+  clearInterval(timer);ed
 }
 
-function skipQuestion() {
-  const correct = QUIZ_STATE.questions[QUIZ_STATE.currentIndex].correctAnswer;
-  initUI.showFeedback(null, correct);
-  handleAnswer("skipped", correct);
-  setTimeout(initUI.nextQuestion, 1500);
+function startTimer() {
+  const selectedDifficulty = difficultySelect.value;
+
+  if (selectedDifficulty === "easy") {
+    timeRemaining = 10;
+  } else if (selectedDifficulty === "medium") {
+    timeRemaining = 8;
+  } else if (selectedDifficulty === "hard") {
+    timeRemaining = 5;
+  }
+
+  timerElement.textContent = timeRemaining;
+
+  timer = setInterval(() => {
+    if (timeRemaining > 0) {
+      timeRemaining--;
+      timerElement.textContent = timeRemaining;
+    } else {
+      clearInterval(timer);
+      alert("Time's up!");
+      nextBtn.style.display = "block"; 
+    }
+  }, 1000);
+}
+
+
+nextBtn.addEventListener("click", async () => {
+  if (questionCount < maxQuestions) {
+    nextBtn.style.display = "none";
+    await getTrivia();
+    startTimer();
+    questionCount++;
+    currentQuestionNumber.textContent = `Question: ${questionCount}`;
+  } else {
+    showScore(); 
+  }
+});
+
+function showScore() {
+  finalScoreElement.textContent = score.correct; 
+  scorePopup.classList.add("show"); 
+}
+
+
+closePopupBtn.addEventListener("click", () => {
+  scorePopup.classList.remove("show"); 
+  resetQuiz(); 
+});
+
+function resetQuiz() {
+  score.correct = 0;
+  questionCount = 0;
+  document.getElementById("quizArea").style.display = "none";
+  fetchBtn.disabled = false; 
 }
