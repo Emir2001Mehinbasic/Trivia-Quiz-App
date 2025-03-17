@@ -1,4 +1,4 @@
-import {showScore } from "./score.js"; // Import iz score.js
+import {showScore } from "./app.js"; // Import iz score.js
 
 const nextBtn = document.querySelector("#nextBtn");
 
