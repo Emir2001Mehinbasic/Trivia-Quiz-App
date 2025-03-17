@@ -1,4 +1,4 @@
-let currentTrivia = {}; // Current trivia question
+let currentTrivia = {}; 
 let timer; 
 let timeRemaining = 0; 
 let questionCount = 0; 
@@ -16,9 +16,9 @@ const timerElement = document.querySelector("#timeRemaining");
 const currentQuestionNumber = document.querySelector("#currentQuestionNumber");
 
 
-const scorePopup = document.getElementById("scorePopup");
-const finalScoreElement = document.getElementById("finalScore");
-const closePopupBtn = document.getElementById("closePopupBtn");
+const scorePopup = document.querySelector("#scorePopup");
+const finalScoreElement = document.querySelector("#finalScore");
+const closePopupBtn = document.querySelector("#closePopupBtn");
 
 fetchBtn.addEventListener("click", async () => {
   const selectedCategory = categorySelect.value;

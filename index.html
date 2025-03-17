@@ -9,8 +9,6 @@
 <body>
     <div class="container">
         <h1>Trivia Quiz</h1>
-
-        <!-- Difficulty and Category Selection -->
         <div>
             <label for="category">Select Category:</label>
             <select id="category">
@@ -19,18 +17,14 @@
                 <option value="History">History</option>
                 <option value="Geography">Geography</option>
             </select>
-
             <label for="difficulty">Select Difficulty:</label>
             <select id="difficulty">
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
             </select>
-
             <button id="fetchBtn">Start Quiz</button>
         </div>
-
-        <!-- Question Display -->
         <div id="quizArea">
             <p id="currentQuestionNumber">Question: 0</p>
             <p id="timeRemaining">Time: 0</p>
@@ -38,8 +32,6 @@
             <ul id="answers"></ul>
             <button id="nextBtn" style="display:none;">Next Question</button>
         </div>
-
-        <!-- Score Popup -->
         <div id="scorePopup">
             <p>Your Score: <span id="finalScore">0</span></p>
             <button id="closePopupBtn">Close</button>
