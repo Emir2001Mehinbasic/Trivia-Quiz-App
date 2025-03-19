@@ -36,6 +36,7 @@ fetchBtn.addEventListener("click", async () => {
     showScore(); 
     fetchBtn.disabled = true; 
   }
+  fetchBtn.style.display = "none"
 });
 
 async function getTrivia() {
@@ -85,7 +86,7 @@ function checkAnswer(event) {
     .querySelectorAll("li")
     .forEach((li) => li.removeEventListener("click", checkAnswer));
   nextBtn.style.display = "block";
-  clearInterval(timer);ed
+  clearInterval(timer);
 }
 
 function startTimer() {
