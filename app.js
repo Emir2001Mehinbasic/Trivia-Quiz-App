@@ -2,7 +2,7 @@ let currentTrivia = {};
 let timer; 
 let timeRemaining = 0; 
 let questionCount = 0; 
-const maxQuestions = 3; 
+const maxQuestions = 5; 
 const score = { correct: 0 }; 
 
 const fetchBtn = document.querySelector("#fetchBtn");
@@ -23,20 +23,20 @@ fetchBtn.addEventListener("click", async () => {
     alert("Please select a category!");
     return;
   }
-
-
+  
   if (questionCount < maxQuestions) {
     nextBtn.style.display = "none"; 
     await getTrivia(); 
     startTimer(); 
     questionCount++; 
     currentQuestionNumber.textContent = `Question: ${questionCount}`; 
-    document.getElementById("quizArea").style.display = "block"; 
   } else {
     showScore(); 
     fetchBtn.disabled = true; 
   }
-  fetchBtn.style.display = "none"
+  fetchBtn.style.display = "none";
+  document.querySelector("#quizArea").style.display = "block";
+  
 });
 
 async function getTrivia() {
@@ -128,7 +128,13 @@ nextBtn.addEventListener("click", async () => {
 });
 
 function showScore() {
-  finalScoreElement.textContent = score.correct; 
+  const playerName = document.querySelector("#players-name").value.trim(); 
+
+  if (!playerName) {
+    alert("Please enter your name!");
+    return;
+  }
+  finalScoreElement.textContent = `${playerName}: ${score.correct}`; 
   scorePopup.classList.add("show"); 
 }
 
