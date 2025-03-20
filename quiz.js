@@ -4,7 +4,7 @@ const nextBtn = document.querySelector("#nextBtn");
 
 nextBtn.addEventListener("click", async () => {
   if (questionCount < maxQuestions) {
-    await getTrivia(); // Učitaj sledeće pitanje
+    await getTrivia(); 
     nextBtn.style.display = "none"; 
   } else {
     showScore(); 

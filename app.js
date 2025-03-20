@@ -25,7 +25,7 @@ fetchBtn.addEventListener("click", async () => {
   }
   
   if (questionCount < maxQuestions) {
-    nextBtn.style.display = "none"; 
+    nextBtn.style.display = "block"; 
     await getTrivia(); 
     startTimer(); 
     questionCount++; 
@@ -71,22 +71,28 @@ async function getTrivia() {
 }
 
 function checkAnswer(event) {
+  clearInterval(timer); 
+
   const selectedAnswer = event.target.textContent;
   const isCorrect = selectedAnswer === currentTrivia.correctAnswer;
 
-  if (isCorrect) {
-    event.target.style.backgroundColor = "green";
-    score.correct++; 
+ 
+  answersList.querySelectorAll("li").forEach((li) => {
+    if (li.textContent === currentTrivia.correctAnswer) {
+      li.style.backgroundColor = "green";
+    }
+    li.removeEventListener("click", checkAnswer); 
+  });
+
+  if (!isCorrect) {
+    event.target.style.backgroundColor = "red"; 
   } else {
-    event.target.style.backgroundColor = "red";
+    score.correct++; 
   }
 
- 
-  answersList
-    .querySelectorAll("li")
-    .forEach((li) => li.removeEventListener("click", checkAnswer));
-  nextBtn.style.display = "block";
-  clearInterval(timer);
+  setTimeout(() => {
+    nextQuestion();
+  }, 2000);
 }
 
 function startTimer() {
@@ -108,24 +114,42 @@ function startTimer() {
       timerElement.textContent = timeRemaining;
     } else {
       clearInterval(timer);
-      alert("Time's up!");
-      nextBtn.style.display = "block"; 
+      showCorrectAnswer(); 
     }
   }, 1000);
 }
 
+function showCorrectAnswer() {
+  answersList.querySelectorAll("li").forEach((li) => {
+    if (li.textContent === currentTrivia.correctAnswer) {
+      li.style.backgroundColor = "green";
+    }
+    li.removeEventListener("click", checkAnswer); 
+  });
 
-nextBtn.addEventListener("click", async () => {
+  setTimeout(() => {
+    nextQuestion(); 
+  }, 2000);
+}
+
+async function nextQuestion() {
   if (questionCount < maxQuestions) {
-    nextBtn.style.display = "none";
     await getTrivia();
     startTimer();
     questionCount++;
     currentQuestionNumber.textContent = `Question: ${questionCount}`;
   } else {
-    showScore(); 
+    showScore();
   }
+}
+
+
+nextBtn.textContent = "Skip Question";
+nextBtn.addEventListener("click", () => {
+  clearInterval(timer); 
+  showCorrectAnswer(); 
 });
+
 
 function showScore() {
   const playerName = document.querySelector("#players-name").value.trim(); 
@@ -134,7 +158,7 @@ function showScore() {
     alert("Please enter your name!");
     return;
   }
-  finalScoreElement.textContent = `${playerName}: ${score.correct}`; 
+  finalScoreElement.textContent = `${playerName} : ${score.correct}`; 
   scorePopup.classList.add("show"); 
 }
 
@@ -149,4 +173,5 @@ function resetQuiz() {
   questionCount = 0;
   document.getElementById("quizArea").style.display = "none";
   fetchBtn.disabled = false; 
+  fetchBtn.style.display = "block"
 }
